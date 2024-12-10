@@ -35,3 +35,118 @@ steps:
 
 01_qc_visual:
   dummy-step-1: dummy_step_1_test_string
+
+07_meteo_proc:
+  dummy-step-7: dummy_step_7_test_string
+  mds-params:
+    TA:
+      tofill: "TA"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: -50
+      oor_max: 50
+      
+    SW_IN:
+      tofill: "SW_IN"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: -5
+      oor_max: 2000
+      
+    LW_IN:
+      tofill: "LW_IN"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: -5
+      oor_max: 500
+      
+    CO2:
+      tofill: "CO2"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: 0
+      oor_max: 100
+    VPD:
+      tofill: "VPD"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: 0
+      oor_max: 100
+      
+    TS:
+      tofill: "TS"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: -50
+      oor_max: 50
+      
+    SWC:
+      tofill: "SWC"
+      driver1: "SW_IN"
+      driver2a: "TA"
+      driver2b: "VPD"
+      #date: "TIMESTAMP_START"
+      tdriver1_min: 20
+      tdriver1_max: 50
+      tdriver2a_min: 2.5
+      tdriver2a_max: 5
+      tdriver2b_min: 5
+      tdriver2b_max: 10
+      #rows_min: 10
+      oor_min: 0
+      oor_max: 100
+      

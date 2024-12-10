@@ -1191,20 +1191,98 @@ class PipelineMeteoProc(object):
         self.execute = self.pipeline.configs.get('meteo_proc_execute', self.METEO_PROC_EXECUTE)
         self.meteo_proc_ex = self.pipeline.configs.get('meteo_proc_ex', os.path.join(self.pipeline.tool_dir, self.METEO_PROC_EX))
         self.meteo_proc_dir = self.pipeline.configs.get('meteo_proc_dir', os.path.join(self.pipeline.data_dir, self.METEO_PROC_DIR))
+        self.mds_params = self.pipeline.configs.get('mds-params', {})
+        
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_info = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INFO]
         self.input_meteo_era_dir = '..' + os.sep + os.path.basename(self.pipeline.meteo_era.meteo_era_dir) + os.sep
         self.input_qc_auto_dir = '..' + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
         self.output_meteo_proc_dir = self.meteo_proc_dir + os.sep
         self.output_log = os.path.join(self.meteo_proc_dir, 'report_{s}_{t}.txt'.format(t=self.pipeline.run_id, s=self.pipeline.siteid))
-        self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -era_path="{e}" -output_path=. > "{log}"'
-        self.cmd = self.cmd_txt.format(o=self.output_meteo_proc_dir,
-                                       cmd_sep=CMD_SEP,
-                                       c=self.meteo_proc_ex,
-                                       q=self.input_qc_auto_dir,
-                                       e=self.input_meteo_era_dir,
-                                       log=self.output_log)
+        
+        # Construct MDS parameters string
+        mds_params_str = self._build_mds_params_string()
+        
+        self.cmd_txt = 'cd "{o}" {cmd_sep} {c} {mds} -qc_auto_path="{q}" -era_path="{e}" -output_path=. > "{log}"'
+        self.cmd = self.cmd_txt.format(
+            o=self.output_meteo_proc_dir,
+            cmd_sep=CMD_SEP,
+            c=self.meteo_proc_ex,
+            mds=mds_params_str,
+            q=self.input_qc_auto_dir,
+            e=self.input_meteo_era_dir,
+            log=self.output_log
+        )
         self.pipeline.config_obj.export_step_to_yaml(self.meteo_proc_dir)
+
+    def _build_mds_params_string(self):
+        """
+        Builds the MDS parameters string for the command line from the values in config_template.yaml in mds-params
+    
+        Rules:
+        1. If one driver is specified, all drivers and min thresholds must be specified
+        2. For thresholds: if only min is specified, pass single value; if both min/max specified, pass as comma-separated
+        3. OOR values are passed as separate parameter for each driver and variable
+    
+        :return: String of MDS parameters formatted for command line
+        :rtype: str
+        """
+        if not self.mds_params:
+            return ""
+    
+        params = []
+        for var, var_params in self.mds_params.items():
+            # Validate parameter existence and values
+            required_keys = {
+                'driver1': str, 'driver2a': str, 'driver2b': str,
+                'tdriver1_min': float, 'tdriver2a_min': float, 'tdriver2b_min': float,
+                'oor_min': float, 'oor_max': float,
+                'odriver1_min': float, 'odriver1_max': float,
+                'odriver2a_min': float, 'odriver2a_max': float,
+                'odriver2b_min': float, 'odriver2b_max': float
+            }
+            optional_keys = {
+                'tdriver1_max': float, 'tdriver2a_max': float, 'tdriver2b_max': float
+            }
+    
+            # Check required parameters
+            has_required = all(
+                key in var_params and var_params[key] and isinstance(var_params[key], typ)
+                for key, typ in required_keys.items()
+            )
+    
+            # Check if any parameters are specified
+            has_any = has_required or any(
+                key in var_params and var_params[key] and isinstance(var_params[key], typ)
+                for key, typ in optional_keys.items()
+            )
+            # no parameters specified - skip silently
+            if not has_any:
+                continue
+    
+            if not has_required:
+                log.warning(f"Variable {var}: missing or invalid required parameters. Skipping variable. Check the inputs in {self.meteo_proc_dir}/config_template.yaml")
+                continue
+    
+            # Add drivers and their out-of-range parameters
+            for driver in ['driver1', 'driver2a', 'driver2b']:
+                params.append(f'-{var}_{driver}={var_params[driver]}')
+                # Add driver-specific out-of-range parameters
+                params.append(f'-{var}_{driver}_oor={var_params[f"o{driver}_min"]},{var_params[f"o{driver}_max"]}')
+    
+            # Add thresholds
+            for driver in ['tdriver1', 'tdriver2a', 'tdriver2b']:
+                max_key = f"{driver}_max"
+                min_key = f"{driver}_min"
+                if max_key in var_params and var_params[max_key]:
+                    params.append(f'-{var}_{driver}={var_params[min_key]},{var_params[max_key]}')
+                else:
+                    params.append(f'-{var}_{driver}={var_params[min_key]}')
+    
+            # Add general out of range parameters
+            params.append(f'-{var}_oor={var_params["oor_min"]},{var_params["oor_max"]}')
+    
+        return " ".join(params)
 
     def pre_validate(self):
         '''
@@ -1232,7 +1310,6 @@ class PipelineMeteoProc(object):
         '''
         Executes meteo_proc
         '''
-
         log.info("Pipeline meteo_proc execution started")
         self.pre_validate()
 
@@ -1246,7 +1323,6 @@ class PipelineMeteoProc(object):
             self.post_validate()
 
         log.info("Pipeline meteo_proc execution finished")
-
 
 class PipelineNEEProc(object):
     '''
@@ -1935,7 +2011,7 @@ class PipelinePrepareURE(object):
 
         # if -100 < RECO < 100, set to -9999
         mask_too_low = (reco < -100)
-        mask_too_high = (reco > 100)
+        mask_too_high = (reco >100)
         count_too_low = numpy.sum(mask_too_low)
         count_too_high = numpy.sum(mask_too_high)
         reco[mask_too_low | mask_too_high] = NAN
