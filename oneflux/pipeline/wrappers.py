@@ -1233,14 +1233,16 @@ class PipelineMeteoProc(object):
         params = []
         for var, var_params in self.mds_params.items():
             # Validate parameter existence and values
-            required_keys = {
+            #required keys must either all have valid values or all be empty/invalid (in this casemds will run with default values)
+            required_keys = { 
                 'driver1': str, 'driver2a': str, 'driver2b': str,
                 'tdriver1_min': float, 'tdriver2a_min': float, 'tdriver2b_min': float,
-                'oor_min': float, 'oor_max': float,
                 'odriver1_min': float, 'odriver1_max': float,
                 'odriver2a_min': float, 'odriver2a_max': float,
-                'odriver2b_min': float, 'odriver2b_max': float
+                'odriver2b_min': float, 'odriver2b_max': float,
+                #'oor_min': float, 'oor_max': float, #for when we can specify the tofill variable. 
             }
+            #optional keys are optional, duh
             optional_keys = {
                 'tdriver1_max': float, 'tdriver2a_max': float, 'tdriver2b_max': float
             }
@@ -1280,7 +1282,7 @@ class PipelineMeteoProc(object):
                     params.append(f'-{var}_{driver}={var_params[min_key]}')
     
             # Add general out of range parameters
-            params.append(f'-{var}_oor={var_params["oor_min"]},{var_params["oor_max"]}')
+            #params.append(f'-{var}_oor={var_params["oor_min"]},{var_params["oor_max"]}') #for when we can specify the tofill variable. 
     
         return " ".join(params)
 

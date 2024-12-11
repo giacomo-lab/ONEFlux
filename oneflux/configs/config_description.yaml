@@ -153,7 +153,7 @@ steps:
     help: dummy-step-7
     type: str
   mds-params:
-    help: Dictionary of mds parameters (drivers and thresholds) for each variable
+    help: Dictionary of mds parameters (drivers and thresholds) for each variable gapfilled by mds in the meteo_proc step
     type: dict
     keys:
       type: str
@@ -162,72 +162,84 @@ steps:
       type: dict
       help: Parameters configuration for the variable
       mapping:
-        tofill:
-          type: str
-          help: Variable to fill (same as key).
-        oor_min:
-          type: float
-          help: Out of range minimum threshold for the variable to fill
-        oor_max:
-          type: float
-          help: Out of range maximum threshold for the variable to fill
+        #tofill: #for when we can specify the tofill variable. 
+        #  type: str
+        #  help: Variable to fill (same as key).
+        #oor_min: #for when we can specify the tofill variable. 
+        #  type: float
+        #  help: Out of range minimum threshold for the variable to fill
+        #oor_max: #for when we can specify the tofill variable. 
+        #  type: float
+        #  help: Out of range maximum threshold for the variable to fill
         driver1:
           type: str
-          help: First driver. If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not specified, driver1 will be SW_IN
+          help: |
+              First driver. If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). 
+              If not specified, driver1 will be SW_IN
         driver2a:
           type: str
-          help: Second driver part a. If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, driver2a will be TA.
+          help: |
+              Second driver part a. If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). 
+              If not provided, driver2a will be TA.
         driver2b:
           type: str
-          help: Second driver part b. If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, driver2b will be VPD
+          help: |
+              Second driver part b. If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max).
+              If not provided, driver2b will be VPD
         #date:
         #  type: str
         #  help: Date field
         tdriver1_min:
           type: float
-          help: set the minimum tolerance value used to define similar conditions related to driver1.
-                If only the min value is specified it is used for all the driver1 values (e.g. -tdriver1=5). 
-                If min and max values are reported (e.g. -tdriver1=4,10) the min value is used for driver1 values below it, 
-                the max value for driver1 values above it while between the two the driver1 value itself
-                is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
-                If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, 20 will be used
+          help: |
+              set the minimum tolerance value used to define similar conditions related to driver1.
+              If only the min value is specified it is used for all the driver1 values (e.g. -tdriver1=5). 
+              If min and max values are reported (e.g. -tdriver1=4,10) the min value is used for driver1 values below it, 
+              the max value for driver1 values above it while between the two the driver1 value itself
+              is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
+              If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, 20 will be used
         tdriver1_max:
           type: float
-          help: set the maximum tolerance value used to define similar conditions related to driver1 (optional).
-                If max values are provided the min (mandatory)value is used for driver1 values below it, 
-                the max value for driver1 values above it while between the two the driver1 value itself
-                is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6)
-                If not provided, 50 will be used
+          help: |
+              set the maximum tolerance value used to define similar conditions related to driver1 (optional).
+              If max values are provided the min (mandatory)value is used for driver1 values below it, 
+              the max value for driver1 values above it while between the two the driver1 value itself
+              is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
+              If not provided, 50 will be used
         tdriver2a_min:
           type: float
-          help: set the minimum tolerance value used to define similar conditions related to driver1.
-                If only the min value is specified it is used for all the driver1 values (e.g. -tdriver1=5). 
-                If min and max values are reported (e.g. -tdriver1=4,10) the min value is used for driver1 values below it, 
-                the max value for driver1 values above it while between the two the driver1 value itself
-                is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
-                If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, 2.5 will be used
+          help: |
+              set the minimum tolerance value used to define similar conditions related to driver1.
+              If only the min value is specified it is used for all the driver1 values (e.g. -tdriver1=5). 
+              If min and max values are reported (e.g. -tdriver1=4,10) the min value is used for driver1 values below it, 
+              the max value for driver1 values above it while between the two the driver1 value itself
+              is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
+              If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, 2.5 will be used
         tdriver2a_max:
           type: float
-          help: set the maximum tolerance value used to define similar conditions related to driver2a (optional).
-                If max values are provided the min (mandatory)value is used for driver1 values below it, 
-                the max value for driver1 values above it while between the two the driver1 value itself
-                is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
-                If not provided, only the min value will be used
+          help: |
+              set the maximum tolerance value used to define similar conditions related to driver2a (optional).
+              If max values are provided the min (mandatory)value is used for driver1 values below it, 
+              the max value for driver1 values above it while between the two the driver1 value itself
+              is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
+              If not provided, only the min value will be used
         tdriver2b_min:
           type: float
-          help: set the minimum tolerance value used to define similar conditions related to driver2b.
-                If only the min value is specified it is used for all the driver1 values (e.g. -tdriver1=5). 
-                If min and max values are reported (e.g. -tdriver1=4,10) the min value is used for driver1 values below it, 
-                the max value for driver1 values above it while between the two the driver1 value itself
-                is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
-                If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, 5 will be used
+          help: |
+              set the minimum tolerance value used to define similar conditions related to driver2b.
+              If only the min value is specified it is used for all the driver1 values (e.g. -tdriver1=5). 
+              If min and max values are reported (e.g. -tdriver1=4,10) the min value is used for driver1 values below it, 
+              the max value for driver1 values above it while between the two the driver1 value itself
+              is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
+              If specified all the others parameters must be specified (except the tdriver1_max, tdriver2a_max, tdriver2b_max). If not provided, 5 will be used
         tdriver2b_max:
           type: float
-          help: set the maximum tolerance value used to define similar conditions related to driver2b (optional).
-                If max values are provided the min (mandatory)value is used for driver1 values below it, 
-                the max value for driver1 values above it while between the two the driver1 value itself
-                is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
-                If not provided, only the min value will be used. 
+          help: |
+              set the maximum tolerance value used to define similar conditions related to driver2b (optional).
+              If max values are provided the min (mandatory)value is used for driver1 values below it, 
+              the max value for driver1 values above it while between the two the driver1 value itself
+              is also used as tolerance (in the example a tolerance of 6 would be used for driver1=6).
+              If not provided, only the min value will be used. 
         odriver1_min:
           type: float
           help: Out of range minimum threshold for driver1
