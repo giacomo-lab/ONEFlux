@@ -75,9 +75,9 @@ class Pipeline(object):
         log.debug("ONEFlux Pipeline: keyword arguments: {a}".format(a=kwargs))
         self.configs = kwargs
         # export compact form
-        self.config_obj.export_to_yaml(dir=self.configs['data_dir'], name=f'compact_{DEFAULT_CONFIG_FILE_NAME.format(s=siteid)}', is_compact=True)
+        self.config_obj.export_to_yaml(dir=self.configs['data_dir'], name='compact_{}'.format(DEFAULT_CONFIG_FILE_NAME.format(s=siteid)), is_compact=True)
         # export long form
-        self.config_obj.export_to_yaml(dir=self.configs['data_dir'], name=f'full_{DEFAULT_CONFIG_FILE_NAME.format(s=siteid)}')
+        self.config_obj.export_to_yaml(dir=self.configs['data_dir'], name='full_{}'.format(DEFAULT_CONFIG_FILE_NAME.format(s=siteid)))
 
         # check valid config attribute labels from defaults from classes
         self.driver_classes = [PipelineFPCreator,
@@ -1233,7 +1233,7 @@ class PipelineMeteoProc(object):
         params = []
         for var, var_params in self.mds_params.items():
             # Validate parameter existence and values
-            #required keys must either all have valid values or all be empty/invalid (in this casemds will run with default values)
+            #required keys must either all have valid values or all be empty/invalid (in this case mds will run with default values)
             required_keys = { 
                 'driver1': str, 'driver2a': str, 'driver2b': str,
                 'tdriver1_min': float, 'tdriver2a_min': float, 'tdriver2b_min': float,
@@ -1258,31 +1258,43 @@ class PipelineMeteoProc(object):
                 key in var_params and var_params[key] and isinstance(var_params[key], typ)
                 for key, typ in optional_keys.items()
             )
-            # no parameters specified - skip silently
+            # no parameters specified - skip silently - mds will run with default values
             if not has_any:
                 continue
     
             if not has_required:
-                log.warning(f"Variable {var}: missing or invalid required parameters. Skipping variable. Check the inputs in {self.meteo_proc_dir}/config_template.yaml")
-                continue
+                msg = "Variable {var}: missing or invalid required parameters. Check the inputs in {dir}/config_template.yaml".format(
+                    var=var, dir=self.meteo_proc_dir)
+                log.error(msg)
+                raise ONEFluxPipelineError(msg)
     
             # Add drivers and their out-of-range parameters
             for driver in ['driver1', 'driver2a', 'driver2b']:
-                params.append(f'-{var}_{driver}={var_params[driver]}')
+                params.append("-{var}_{driver}={value}".format(
+                    var=var, driver=driver, value=var_params[driver]))
                 # Add driver-specific out-of-range parameters
-                params.append(f'-{var}_{driver}_oor={var_params[f"o{driver}_min"]},{var_params[f"o{driver}_max"]}')
+                params.append("-{var}_{driver}_oor={min},{max}".format(
+                    var=var, driver=driver, 
+                    min=var_params["o{driver}_min".format(driver=driver)],
+                    max=var_params["o{driver}_max".format(driver=driver)]))
     
             # Add thresholds
             for driver in ['tdriver1', 'tdriver2a', 'tdriver2b']:
-                max_key = f"{driver}_max"
-                min_key = f"{driver}_min"
+                max_key = "{driver}_max".format(driver=driver)
+                min_key = "{driver}_min".format(driver=driver)
                 if max_key in var_params and var_params[max_key]:
-                    params.append(f'-{var}_{driver}={var_params[min_key]},{var_params[max_key]}')
+                    params.append("-{var}_{driver}={min},{max}".format(
+                        var=var, driver=driver,
+                        min=var_params[min_key], 
+                        max=var_params[max_key]))
                 else:
-                    params.append(f'-{var}_{driver}={var_params[min_key]}')
+                    params.append("-{var}_{driver}={min}".format(
+                        var=var, driver=driver, 
+                        min=var_params[min_key]))
     
             # Add general out of range parameters
-            #params.append(f'-{var}_oor={var_params["oor_min"]},{var_params["oor_max"]}') #for when we can specify the tofill variable. 
+            #params.append("-{var}_oor={min},{max}".format(
+            #    var=var, min=var_params["oor_min"], max=var_params["oor_max"])) 
     
         return " ".join(params)
 
