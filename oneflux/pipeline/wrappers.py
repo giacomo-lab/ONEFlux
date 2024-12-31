@@ -1232,42 +1232,48 @@ class PipelineMeteoProc(object):
     
         params = []
         for var, var_params in self.mds_params.items():
+            print("Processing variable:", var)
+            print("Variable parameters:", var_params)
+            
             # Validate parameter existence and values
-            #required keys must either all have valid values or all be empty/invalid (in this case mds will run with default values)
-            required_keys = { 
+            required_keys = {
                 'driver1': str, 'driver2a': str, 'driver2b': str,
-                'tdriver1_min': float, 'tdriver2a_min': float, 'tdriver2b_min': float,
-                'odriver1_min': float, 'odriver1_max': float,
-                'odriver2a_min': float, 'odriver2a_max': float,
-                'odriver2b_min': float, 'odriver2b_max': float,
-                #'oor_min': float, 'oor_max': float, #for when we can specify the tofill variable. 
+                'tdriver1_min': (int, float), 'tdriver2a_min': (int, float), 'tdriver2b_min': (int, float),
+                'odriver1_min': (int, float), 'odriver1_max': (int, float),
+                'odriver2a_min': (int, float), 'odriver2a_max': (int, float),
+                'odriver2b_min': (int, float), 'odriver2b_max': (int, float),
             }
-            #optional keys are optional, duh
-            optional_keys = {
-                'tdriver1_max': float, 'tdriver2a_max': float, 'tdriver2b_max': float
-            }
-    
-            # Check required parameters
+            
+            # Add debug logging
+            for key, typ in required_keys.items():
+                exists = key in var_params
+                if exists:
+                    value = var_params[key]
+                    # Handle both single types and type tuples
+                    if isinstance(typ, tuple):
+                        type_ok = any(isinstance(value, t) for t in typ)
+                    else:
+                        type_ok = isinstance(value, typ)
+                    print("Checking {key}: exists={exists}, value={value}, type_ok={type_ok}".format(
+                        key=key, exists=exists, value=value, type_ok=type_ok))
+                else:
+                    print("Missing required key: {key}".format(key=key))
+
+            # Check required parameters - only verify existence and type
             has_required = all(
-                key in var_params and var_params[key] and isinstance(var_params[key], typ)
+                key in var_params and (
+                    isinstance(var_params[key], typ) if isinstance(typ, type)
+                    else any(isinstance(var_params[key], t) for t in typ)
+                )
                 for key, typ in required_keys.items()
             )
-    
-            # Check if any parameters are specified
-            has_any = has_required or any(
-                key in var_params and var_params[key] and isinstance(var_params[key], typ)
-                for key, typ in optional_keys.items()
-            )
-            # no parameters specified - skip silently - mds will run with default values
-            if not has_any:
-                continue
-    
+
             if not has_required:
                 msg = "Variable {var}: missing or invalid required parameters. Check the inputs in {dir}/config_template.yaml".format(
                     var=var, dir=self.meteo_proc_dir)
                 log.error(msg)
                 raise ONEFluxPipelineError(msg)
-    
+
             # Add drivers and their out-of-range parameters
             for driver in ['driver1', 'driver2a', 'driver2b']:
                 params.append("-{var}_{driver}={value}".format(
@@ -1291,6 +1297,8 @@ class PipelineMeteoProc(object):
                     params.append("-{var}_{driver}={min}".format(
                         var=var, driver=driver, 
                         min=var_params[min_key]))
+                
+            print("Params:", params)
     
             # Add general out of range parameters
             #params.append("-{var}_oor={min},{max}".format(
