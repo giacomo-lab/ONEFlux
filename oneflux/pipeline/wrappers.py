@@ -1279,7 +1279,7 @@ class PipelineMeteoProc(object):
                 params.append("-{var}_{driver}={value}".format(
                     var=var, driver=driver, value=var_params[driver]))
                 # Add driver-specific out-of-range parameters
-                params.append("-{var}_{driver}_oor={min},{max}".format(
+                params.append("-{var}_o{driver}={min},{max}".format(
                     var=var, driver=driver, 
                     min=var_params["o{driver}_min".format(driver=driver)],
                     max=var_params["o{driver}_max".format(driver=driver)]))
@@ -1297,8 +1297,6 @@ class PipelineMeteoProc(object):
                     params.append("-{var}_{driver}={min}".format(
                         var=var, driver=driver, 
                         min=var_params[min_key]))
-                
-            print("Params:", params)
     
             # Add general out of range parameters
             #params.append("-{var}_oor={min},{max}".format(
